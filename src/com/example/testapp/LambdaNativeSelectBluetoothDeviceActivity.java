@@ -31,7 +31,6 @@ public class LambdaNativeSelectBluetoothDeviceActivity extends Activity {
 		setContentView(R.layout.activity_lambda_native_select_bluetooth_device);
 
 		progressBar = ((ProgressBar) findViewById(R.id.progressBar1));
-		progressBar.setVisibility(View.VISIBLE);
 		
 		final List<LambdaNativeBluetoothDevice> devicesFound = new ArrayList<LambdaNativeBluetoothDevice>();
 
@@ -92,6 +91,7 @@ public class LambdaNativeSelectBluetoothDeviceActivity extends Activity {
 				});
 
 		adapter.startDiscovery();
+		progressBar.setVisibility(View.VISIBLE);
 	}
 
 	@Override
