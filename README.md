@@ -7,7 +7,7 @@ nearby, select one to connect to, and send a message (currently the infamous
 
 This code was written when I started learning how to write Android apps in Java,
 and how to access Bluetooth devices, with the intention of integrating parts of
-it into [lambdanative]:(https://github.com/part-cw/lambdanative).
+it into [lambdanative](https://github.com/part-cw/lambdanative).
 
 # Legalese
 
