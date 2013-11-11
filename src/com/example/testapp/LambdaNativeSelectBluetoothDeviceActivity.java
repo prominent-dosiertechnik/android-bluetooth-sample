@@ -23,11 +23,16 @@ import android.view.*;
 import android.widget.*;
 
 public class LambdaNativeSelectBluetoothDeviceActivity extends Activity {
+	private ProgressBar progressBar;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_lambda_native_select_bluetooth_device);
 
+		progressBar = ((ProgressBar) findViewById(R.id.progressBar1));
+		progressBar.setVisibility(View.VISIBLE);
+		
 		final List<LambdaNativeBluetoothDevice> devicesFound = new ArrayList<LambdaNativeBluetoothDevice>();
 
 		final ListView btDeviceList = (ListView) findViewById(R.id.btDeviceList);
@@ -61,7 +66,7 @@ public class LambdaNativeSelectBluetoothDeviceActivity extends Activity {
 		registerReceiver(new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context arg0, Intent arg1) {
-				((ProgressBar) findViewById(R.id.progressBar1)).setVisibility(View.INVISIBLE);
+				progressBar.setVisibility(View.INVISIBLE);
 			}
 		}, new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED));
 
