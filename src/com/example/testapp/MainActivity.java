@@ -14,12 +14,13 @@
 
 package com.example.testapp;
 
+import java.io.IOException;
+
 import android.os.Bundle;
 import android.view.*;
-import android.widget.Button;
+import android.widget.TextView;
 import android.app.*;
 import android.content.*;
-import android.content.DialogInterface.OnClickListener;
 
 public class MainActivity extends Activity {
 	// TODO:
@@ -31,33 +32,65 @@ public class MainActivity extends Activity {
 	private LambdaNativeBluetoothConnection conn = null;
 	private Procedure<Intent> deviceSelectedContinuation = null;
 
+	private TextView textView1;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		// Initialize the GUI. Standard Android stuff.
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		final Button connectButton = (Button) findViewById(R.id.connectButton);
-		connectButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				connect();
-			}
-		});
-
-		final Button sendButton = (Button) findViewById(R.id.sendButton);
-		sendButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View arg0) {
-				sendData();
-			}
-		});
+		textView1 = (TextView) findViewById(R.id.textView1);
+		textView1.setText("");
 
 		// Connect to the BT adapter, close program if BT not enabled
 		try {
 			adapter = LambdaNativeBluetoothAdapter.getInstance();
 		} catch (Exception ex) {
 			caught("onCreate", ex);
+		}
+	}
+
+	private final StringBuilder output = new StringBuilder();
+
+	private void print(String what) {
+		output.append(what);
+		output.append('\n');
+		refreshOutput();
+	}
+
+	private void printChar(char what) {
+		output.append(what);
+		refreshOutput();
+	}
+
+	private void refreshOutput() {
+		textView1.post(new Runnable() {
+			@Override
+			public void run() {
+				textView1.setText(output.toString());
+			}
+		});
+	}
+
+	private Thread readThread;
+
+	private void readThreadLoop() {
+		while (conn != null) {
+			int i;
+			try {
+				i = conn.getInputStream().read();
+			} catch (IOException e) {
+				print("\n> IOException: " + e.getMessage());
+				break;
+			}
+
+			if (i == -1) {
+				print("\n> Connection closed.");
+				break;
+			}
+
+			printChar((char) i);
 		}
 	}
 
@@ -74,7 +107,13 @@ public class MainActivity extends Activity {
 					final String address = data.getStringExtra("result");
 					try {
 						conn = adapter.connect(address);
-						showMessageBox("Connection established :)");
+						print("\n> Connection established :)");
+						readThread = new Thread(new Runnable() {
+							@Override
+							public void run() {
+								readThreadLoop();
+							}
+						});
 					} catch (Exception ex) {
 						caught("deviceSelectedContinuation", ex);
 					}
@@ -103,7 +142,7 @@ public class MainActivity extends Activity {
 
 	private void sendData() {
 		if (conn == null) {
-			showMessageBox("Please connect to a device first!");
+			print("\n> Please connect to a device first!");
 			return;
 		}
 
@@ -118,33 +157,31 @@ public class MainActivity extends Activity {
 		try {
 			if (conn != null)
 				conn.close();
+			if (readThread != null)
+				readThread.join();
 		} catch (Exception ex) {
 			caught("disconnect", ex);
 		}
 		conn = null;
-	}
-
-	private void showMessageBox(String message) {
-		final AlertDialog dlg = new AlertDialog.Builder(this).create();
-		dlg.setTitle("Whoops");
-		dlg.setMessage(message);
-		dlg.setButton(DialogInterface.BUTTON_POSITIVE, "OK",
-				new OnClickListener() {
-					public void onClick(DialogInterface arg0, int arg1) {
-						dlg.dismiss();
-					}
-				});
-		dlg.show();
+		readThread = null;
 	}
 
 	private void caught(String sender, Exception ex) {
-		new AlertDialog.Builder(this).setTitle("Whoops")
-				.setMessage("Exception in " + sender + ": " + ex.getMessage())
-				.setPositiveButton("OK", new OnClickListener() {
-					public void onClick(DialogInterface arg0, int arg1) {
-						finish();
-					}
-				}).show();
+		print("\n> Exception in " + sender + ":\n" + ex.getMessage());
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.action_connect:
+			connect();
+			return true;
+		case R.id.action_send:
+			sendData();
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
 	}
 
 	@Override
