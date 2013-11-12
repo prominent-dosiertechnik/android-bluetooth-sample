@@ -53,13 +53,13 @@ public class MainActivity extends Activity {
 
 	private final StringBuilder output = new StringBuilder();
 
-	private void print(String what) {
+	private synchronized void print(String what) {
 		output.append(what);
 		output.append('\n');
 		refreshOutput();
 	}
 
-	private void printChar(char what) {
+	private synchronized void printChar(char what) {
 		output.append(what);
 		refreshOutput();
 	}
@@ -114,6 +114,7 @@ public class MainActivity extends Activity {
 								readThreadLoop();
 							}
 						});
+						readThread.start();
 					} catch (Exception ex) {
 						caught("deviceSelectedContinuation", ex);
 					}
